@@ -4,7 +4,7 @@ GST Report Generator - Fully Automated Version
 ================================================================================
 Author   : Jakkula Abhishek
 Email    : Jakkulaabhishek5@gmail.com
-Version  : 3.0 (Ultimate)
+Version  : 3.1 (Background Enhanced)
 Features :
     - Upload any GSTR-1 and GSTR-3B PDFs (any filenames)
     - Auto-detect tax period from PDF content
@@ -12,7 +12,7 @@ Features :
     - Generate Excel reports (multi-month GSTR-3B and combined GSTR-1)
     - Interactive dashboard with KPIs, monthly trends, and charts
     - Data validation, error logging, caching for performance
-    - Beautiful modern UI with branding and responsive layout
+    - Beautiful modern UI with light gradient background (works in both light/dark mode)
 ================================================================================
 """
 
@@ -41,14 +41,38 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for premium look
+# Custom CSS for premium look - LIGHT GRADIENT BACKGROUND (no dark mode override)
 st.markdown("""
 <style>
-    /* Main background */
+    /* Main background - soft light gradient with subtle pattern */
     .stApp {
-        background: linear-gradient(135deg, #f0f2f6 0%, #e9ecef 100%);
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     }
-    /* Header card */
+    
+    /* Optional: add a subtle noise texture (very light) */
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48cGF0aCBkPSJNMjAgMjBhMjAgMjAgMCAwIDEgMjAgMjAgMjAgMjAgMCAwIDEtMjAgMjAgMjAgMjAgMCAwIDEtMjAtMjAgMjAgMjAgMCAwIDEgMjAtMjB6IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDMiLz48L3N2Zz4=');
+        background-repeat: repeat;
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    /* All main containers get a semi-transparent white background for readability */
+    .main .block-container {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 30px;
+        padding: 2rem;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        backdrop-filter: blur(2px);
+    }
+    
+    /* Header card - gradient blue */
     .header-card {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
         border-radius: 25px;
@@ -74,19 +98,22 @@ st.markdown("""
         margin-top: 1rem;
         font-weight: 400;
     }
-    /* Cards for upload sections */
+    
+    /* Cards for upload sections - solid white with shadow */
     .upload-card {
         background: white;
         border-radius: 20px;
         padding: 1.5rem;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         margin-bottom: 1.5rem;
-        transition: transform 0.2s;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid rgba(0,0,0,0.05);
     }
     .upload-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.12);
     }
+    
     /* Custom button */
     .stButton > button {
         background: linear-gradient(90deg, #1e3c72, #2a5298);
@@ -97,12 +124,15 @@ st.markdown("""
         font-size: 1rem;
         border: none;
         transition: 0.3s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .stButton > button:hover {
         background: linear-gradient(90deg, #2a5298, #1e3c72);
         transform: scale(1.02);
         color: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
+    
     /* Success message */
     .success-msg {
         background: #d4edda;
@@ -111,7 +141,9 @@ st.markdown("""
         border-radius: 15px;
         margin: 1rem 0;
         border-left: 6px solid #28a745;
+        font-weight: 500;
     }
+    
     /* Metrics style */
     .metric-card {
         background: white;
@@ -119,13 +151,43 @@ st.markdown("""
         padding: 1rem;
         text-align: center;
         box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e9ecef;
     }
+    
     /* Sidebar styling */
-    .css-1d391kg {
+    [data-testid="stSidebar"] {
         background-color: #f8f9fa;
+        border-right: 1px solid #dee2e6;
     }
+    
+    /* Footer */
     footer {
         visibility: hidden;
+    }
+    
+    /* Ensure text contrast */
+    body, .stMarkdown, .stText, .stMetric label {
+        color: #212529 !important;
+    }
+    
+    /* Fix for dark mode override - keep backgrounds light */
+    @media (prefers-color-scheme: dark) {
+        .stApp {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+        }
+        .main .block-container {
+            background: rgba(255, 255, 255, 0.9) !important;
+        }
+        .upload-card {
+            background: white !important;
+            color: #212529 !important;
+        }
+        [data-testid="stSidebar"] {
+            background-color: #f8f9fa !important;
+        }
+        .stMarkdown, .stText, .stMetric label {
+            color: #212529 !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -866,7 +928,7 @@ def main():
     
     # Footer
     st.markdown("---")
-    st.markdown("<center><small>© 2025 Jakkula Abhishek | Automated GST Reporting Tool | Version 3.0</small></center>", unsafe_allow_html=True)
+    st.markdown("<center><small>© 2025 Jakkula Abhishek | Automated GST Reporting Tool | Version 3.1</small></center>", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
